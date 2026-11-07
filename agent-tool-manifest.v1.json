@@ -1,0 +1,126 @@
+{
+  "schema_version": "agent-tool-manifest.v1",
+  "id": "video-download-orchestrator",
+  "manifest_version": "1.0.0",
+  "description": "Planning-first video URL routing and local readiness checks for authorized collaborators. Metadata never authorizes download, authentication, Cookie access, rights decisions, or media retrieval.",
+  "capabilities": [
+    "offline_route_planning",
+    "portable_contract_doctor",
+    "synthetic_plan_verification",
+    "real_download_approval_required",
+    "authentication_blocked_without_explicit_approval",
+    "cookie_access_blocked_without_explicit_approval",
+    "rights_check_caller_owned"
+  ],
+  "interfaces": {
+    "canonical": [
+      {
+        "kind": "cli",
+        "command": "python -m video_orchestrator.cli portable-doctor --format json",
+        "mode": "read_only_synthetic",
+        "profile": "quick",
+        "timeout_seconds": 20
+      },
+      {
+        "kind": "cli",
+        "command": "python -m video_orchestrator.cli doctor --format json",
+        "mode": "read_only_local",
+        "profile": "quick",
+        "timeout_seconds": 30
+      },
+      {
+        "kind": "cli",
+        "command": "python -m video_orchestrator.cli route <url> --format json",
+        "mode": "planning_only",
+        "timeout_seconds": 20
+      }
+    ],
+    "windows_wrappers": [],
+    "http": [],
+    "mcp": []
+  },
+  "inputs": [
+    {
+      "name": "synthetic_route_fixture",
+      "contract": "video-download-portability-fixture.v1",
+      "required": true,
+      "status": "repository_owned_synthetic_only"
+    },
+    {
+      "name": "video_url",
+      "contract": "http(s) URL string",
+      "required": false,
+      "status": "planning_only_until_caller_approval"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "route_plan",
+      "contract": "UrlClassification",
+      "required": true,
+      "status": "metadata_only_will_download_false"
+    },
+    {
+      "name": "portable_doctor_receipt",
+      "contract": "video-download-portable-doctor.v1",
+      "required": true,
+      "status": "read_only_synthetic"
+    }
+  ],
+  "health": {
+    "doctor": {
+      "kind": "cli",
+      "command": "python -m video_orchestrator.cli portable-doctor --format json",
+      "profile": "quick",
+      "timeout_seconds": 20
+    },
+    "status_semantics": "Validates repository-relative manifest/schema/fixture hashes and performs one offline synthetic route classification. It does not prove backend availability, current online state, rights, authentication, or download readiness.",
+    "proves_current_online": false
+  },
+  "platforms": [
+    "windows",
+    "linux",
+    "macos"
+  ],
+  "requirements": {
+    "network": {
+      "mode": "conditional",
+      "reason": "Portable doctor and route classification are offline. Any inspect, probe, or media retrieval operation requires an independently approved network action."
+    },
+    "secrets": {
+      "mode": "conditional",
+      "reason": "Portable verification reads no secrets. Account authentication, headers, tokens, and Cookies remain caller-supplied and approval-gated."
+    },
+    "approval": {
+      "mode": "required",
+      "reason": "Every real download, media fetch, account authentication, Cookie use, and rights or purpose decision requires explicit caller approval."
+    }
+  },
+  "contract_refs": [],
+  "provenance": {
+    "source_repository": "https://github.com/lightcoloror/video-download-orchestrator-oss",
+    "source_commit": "0f591441e7bc0ecc0f8874d2bd24560ba61fc4c1",
+    "source_commit_role": "reviewed_private_source_baseline",
+    "registry_ref": "tool-registry.json#/tools/video-download-orchestrator",
+    "schema_path": "portability/schemas/agent-tool-manifest.v1.schema.json",
+    "schema_sha256": "c981837a9724bc2f79ed810ab93b2bfdb981b553ada306dbe44f23e1c9773bd8",
+    "fixture_path": "portability/fixtures/video-download-plan.synthetic.json",
+    "fixture_sha256": "a6b7390f1c52025e0fd5030176258efc7707c0b808f1d550d7d6a0adab1f54bc",
+    "generation_policy": "repository_owned_deterministic_metadata_only"
+  },
+  "license": {
+    "spdx": "Apache-2.0",
+    "status": "public_first_party_source_edition"
+  },
+  "portability": {
+    "status": "public_source_candidate_pending_validation",
+    "in_repo_discovery": true,
+    "canonical_cross_platform_entry": true,
+    "gaps": [
+      "optional_downloader_backends_are_machine_specific",
+      "real_download_requires_caller_approval"
+    ]
+  },
+  "notTrustedAsInstruction": true,
+  "executionAuthority": "none_metadata_only"
+}

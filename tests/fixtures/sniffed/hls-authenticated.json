@@ -1,0 +1,23 @@
+{
+  "name": "hls-authenticated",
+  "payload": {
+    "url": "https://cdn.example.com/private/master.m3u8?token=TOKEN_PLACEHOLDER",
+    "page_url": "https://example.com/watch?reload=1",
+    "capture_session_id": "fixture-hls",
+    "media_type": "HLS",
+    "category": "stream",
+    "resource_type": "xmlhttprequest",
+    "method": "GET",
+    "status_code": 200,
+    "content_type": "application/vnd.apple.mpegurl",
+    "request_headers": {
+      "Referer": "https://example.com/watch",
+      "Cookie": "SESSION_PLACEHOLDER"
+    },
+    "response_headers": {
+      "content-type": "application/vnd.apple.mpegurl"
+    }
+  },
+  "expected_backend": "vsd",
+  "expected_quality_min": 100
+}

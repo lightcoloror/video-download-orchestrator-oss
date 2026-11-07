@@ -1,0 +1,1474 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>视频下载调度器</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f6f8;
+      --panel: #ffffff;
+      --text: #1d2733;
+      --muted: #667281;
+      --line: #d9dee7;
+      --accent: #0f766e;
+      --accent-strong: #115e59;
+      --warn: #b45309;
+      --bad: #b42318;
+      --good: #067647;
+      --code: #101828;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 14px;
+      letter-spacing: 0;
+    }
+
+    header {
+      background: var(--panel);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .shell {
+      width: min(1360px, calc(100vw - 32px));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      min-height: 62px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 21px;
+      font-weight: 720;
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 15px;
+      font-weight: 720;
+    }
+
+    label {
+      display: block;
+      margin: 10px 0 6px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--text);
+      font: inherit;
+      padding: 9px 10px;
+    }
+
+    textarea {
+      min-height: 118px;
+      resize: vertical;
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    main {
+      padding: 18px 0 24px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(320px, 390px) minmax(380px, 1fr) minmax(380px, 1.1fr);
+      gap: 14px;
+      align-items: start;
+    }
+
+    section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .status-group {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .dot.warning {
+      background: var(--warn);
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 142px;
+      gap: 10px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    button {
+      min-height: 36px;
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      background: var(--accent);
+      color: #fff;
+      padding: 8px 11px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      background: #fff;
+      color: var(--accent-strong);
+    }
+
+    button.warning {
+      border-color: var(--warn);
+      background: #fff;
+      color: var(--warn);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .check {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    .check input {
+      width: 16px;
+      height: 16px;
+      margin: 0;
+    }
+
+    .task-list {
+      display: grid;
+      gap: 8px;
+      max-height: 610px;
+      overflow: auto;
+    }
+
+    .task-item {
+      width: 100%;
+      text-align: left;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      border-radius: 7px;
+      padding: 10px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .task-item.active {
+      border-color: var(--accent);
+      box-shadow: inset 3px 0 0 var(--accent);
+    }
+
+    .task-main {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .task-url {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-width: 0;
+      font-weight: 700;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-width: 72px;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 12px;
+      font-weight: 750;
+      background: #eef2f6;
+      color: #344054;
+      white-space: nowrap;
+    }
+
+    .badge.failed {
+      background: #fee4e2;
+      color: var(--bad);
+    }
+
+    .badge.finished {
+      background: #dcfae6;
+      color: var(--good);
+    }
+
+    .badge.accepted {
+      background: #d1e9ff;
+      color: #175cd3;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .tab {
+      border-color: var(--line);
+      color: var(--text);
+      background: #fff;
+      min-height: 32px;
+      padding: 6px 10px;
+    }
+
+    .tab.active {
+      border-color: var(--accent);
+      color: #fff;
+      background: var(--accent);
+    }
+
+    .summary-panel {
+      display: grid;
+      gap: 12px;
+      margin: 12px 0;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .summary-item {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 9px 10px;
+      min-width: 0;
+    }
+
+    .summary-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 750;
+      margin-bottom: 4px;
+    }
+
+    .summary-value {
+      color: var(--text);
+      font-weight: 650;
+      overflow-wrap: anywhere;
+    }
+
+    .message {
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--accent);
+      border-radius: 7px;
+      padding: 10px 12px;
+      background: #f8fafc;
+      color: var(--text);
+      line-height: 1.55;
+    }
+
+    .message.ok {
+      border-left-color: var(--good);
+      background: #f0fdf4;
+    }
+
+    .message.warn {
+      border-left-color: var(--warn);
+      background: #fffbeb;
+    }
+
+    .message.bad {
+      border-left-color: var(--bad);
+      background: #fff1f0;
+    }
+
+    .raw-details {
+      margin-top: 12px;
+    }
+
+    .raw-toggle {
+      cursor: pointer;
+      color: var(--accent-strong);
+      font-weight: 750;
+      margin-bottom: 8px;
+    }
+
+    pre {
+      min-height: 220px;
+      max-height: 640px;
+      margin: 0;
+      overflow: auto;
+      border-radius: 7px;
+      background: var(--code);
+      color: #eef4ff;
+      padding: 13px;
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .links {
+      display: grid;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .links a {
+      color: var(--accent-strong);
+      overflow-wrap: anywhere;
+      text-decoration: none;
+      font-weight: 650;
+    }
+
+    .empty {
+      border: 1px dashed var(--line);
+      border-radius: 7px;
+      color: var(--muted);
+      padding: 18px;
+      text-align: center;
+    }
+
+    @media (max-width: 1180px) {
+      .layout {
+        grid-template-columns: minmax(320px, 400px) minmax(0, 1fr);
+      }
+
+      .detail-panel {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .layout,
+      .row {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 13px 0;
+      }
+
+      pre {
+        min-height: 180px;
+      }
+
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="shell topbar">
+      <h1>视频下载调度器</h1>
+      <div class="status-group">
+        <div class="status"><span class="dot"></span><span id="health">检查中</span></div>
+        <div class="status"><span class="dot" id="configDot"></span><span id="runtimeConfig">配置</span></div>
+      </div>
+    </div>
+  </header>
+  <main class="shell">
+    <div class="layout">
+      <section>
+        <h2>下载规划</h2>
+        <label for="url">视频或页面链接</label>
+        <input id="url" value="https://example.com/video">
+        <div class="row">
+          <div>
+            <label for="outputDir">输出目录</label>
+            <input id="outputDir" value="downloads">
+          </div>
+          <div>
+            <label for="backend">下载后端</label>
+            <select id="backend">
+              <option value="">自动</option>
+              <option value="yt-dlp">yt-dlp</option>
+              <option value="n_m3u8dl_re">n_m3u8dl_re</option>
+              <option value="streamlink">streamlink</option>
+              <option value="gallery-dl">gallery-dl</option>
+              <option value="lux">lux</option>
+            </select>
+          </div>
+        </div>
+        <label for="dbPath">任务数据库</label>
+        <input id="dbPath" value=".vdo/tasks.sqlite">
+        <div class="actions">
+          <button id="downloadBtn">一键下载</button>
+          <button id="mediagoBtn" class="secondary">导入 MediaGo</button>
+          <button id="routeBtn" class="secondary">识别路由</button>
+          <button id="planBtn" class="secondary">写入计划</button>
+        </div>
+        <label for="batch">批量输入（可粘贴链接、简介、时间轴，系统会先清洗去重）</label>
+        <textarea id="batch">https://example.com/video
+https://example.com/live/master.m3u8</textarea>
+        <div class="actions">
+          <button id="batchCleanBtn" class="secondary">清洗批量输入</button>
+          <button id="batchBtn" class="secondary">批量规划</button>
+          <button id="batchMediagoBtn" class="secondary">批量导入 MediaGo</button>
+          <button id="batchExecuteBtn">自动批量下载</button>
+        </div>
+      </section>
+
+      <section>
+        <div class="toolbar">
+          <h2>任务</h2>
+          <label class="check"><input id="problemOnly" type="checkbox">只看问题任务</label>
+        </div>
+        <div class="actions">
+          <button id="refreshTasksBtn" class="secondary">刷新</button>
+        </div>
+        <div id="taskList" class="task-list"></div>
+      </section>
+
+      <section class="detail-panel">
+        <div class="toolbar">
+          <h2>详情</h2>
+          <span id="selectedMeta" class="meta">未选择任务</span>
+        </div>
+        <div class="actions">
+          <button id="rerunBtn" class="warning" disabled>规划重跑</button>
+          <button id="executeRerunBtn" class="warning" disabled>重新执行</button>
+          <button id="resumeBtn" class="secondary" disabled>页面嗅探恢复</button>
+          <button id="acceptBtn" class="secondary" disabled>标记通过</button>
+          <button id="vkpHandoffBtn" class="secondary" disabled>生成 VKP 交接包</button>
+        </div>
+        <div id="artifactTabs" class="tabs"></div>
+        <div id="artifactLinks" class="links"></div>
+        <div id="summaryPanel" class="summary-panel">
+          <div class="message">选择任务或点击操作后，这里会显示中文摘要。</div>
+        </div>
+        <details class="raw-details">
+          <summary class="raw-toggle">查看原始数据</summary>
+          <pre id="response">{}</pre>
+        </details>
+      </section>
+    </div>
+  </main>
+  <script>
+    const responseEl = document.querySelector("#response");
+    const summaryPanelEl = document.querySelector("#summaryPanel");
+    const healthEl = document.querySelector("#health");
+    const runtimeConfigEl = document.querySelector("#runtimeConfig");
+    const configDotEl = document.querySelector("#configDot");
+    const urlEl = document.querySelector("#url");
+    const outputDirEl = document.querySelector("#outputDir");
+    const backendEl = document.querySelector("#backend");
+    const batchEl = document.querySelector("#batch");
+    const dbPathEl = document.querySelector("#dbPath");
+    const problemOnlyEl = document.querySelector("#problemOnly");
+    const taskListEl = document.querySelector("#taskList");
+    const selectedMetaEl = document.querySelector("#selectedMeta");
+    const artifactTabsEl = document.querySelector("#artifactTabs");
+    const artifactLinksEl = document.querySelector("#artifactLinks");
+    const rerunBtn = document.querySelector("#rerunBtn");
+    const executeRerunBtn = document.querySelector("#executeRerunBtn");
+    const resumeBtn = document.querySelector("#resumeBtn");
+    const acceptBtn = document.querySelector("#acceptBtn");
+    const vkpHandoffBtn = document.querySelector("#vkpHandoffBtn");
+
+    let selectedTask = null;
+    let selectedArtifacts = {};
+    let selectedReview = null;
+    let activeArtifact = null;
+
+    function show(value, context = "") {
+      responseEl.textContent = typeof value === "string" ? value : JSON.stringify(value, null, 2);
+      renderSummary(value, context);
+    }
+
+    async function requestJson(url, options) {
+      const response = await fetch(url, options);
+      const payload = await response.json();
+      if (!response.ok) {
+        throw payload;
+      }
+      return payload;
+    }
+
+    async function requestText(url) {
+      const response = await fetch(url);
+      const text = await response.text();
+      if (!response.ok) {
+        throw text;
+      }
+      return text;
+    }
+
+    function statusClass(status) {
+      if (status === "failed") return "failed";
+      if (status === "finished") return "finished";
+      if (status === "accepted") return "accepted";
+      return "";
+    }
+
+    function statusLabel(status) {
+      const labels = {
+        accepted: "已通过",
+        failed: "失败",
+        finished: "已完成",
+        finished_with_failures: "部分失败",
+        finished_with_retryable: "部分需恢复",
+        ok: "正常",
+        planned: "已规划",
+        pending: "等待中",
+        retryable: "可重试",
+        running: "运行中"
+      };
+      return labels[status] || status || "未知";
+    }
+
+    function artifactLabel(kind) {
+      const labels = {
+        log: "执行日志",
+        manifest: "下载计划",
+        report: "下载报告",
+        review_checklist: "检查清单"
+      };
+      return labels[kind] || kind;
+    }
+
+    function toneForStatus(status) {
+      if (status === "failed" || status === "finished_with_failures") return "bad";
+      if (status === "retryable" || status === "running" || status === "finished_with_retryable") return "warn";
+      if (status === "finished" || status === "accepted" || status === "ok" || status === "planned") return "ok";
+      return "";
+    }
+
+    function valueOrEmpty(value) {
+      if (value === null || value === undefined || value === "") return "暂无";
+      return String(value);
+    }
+
+    function renderKeyValues(items) {
+      return `
+        <div class="summary-grid">
+          ${items.map(([label, value]) => `
+            <div class="summary-item">
+              <div class="summary-label">${escapeHtml(label)}</div>
+              <div class="summary-value">${escapeHtml(valueOrEmpty(value))}</div>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function renderSummary(value, context = "") {
+      if (context && typeof context === "object" && context.type === "artifact") {
+        renderArtifactSummary(context.kind, value);
+        return;
+      }
+      if (typeof value === "string") {
+        renderTextSummary(value, context);
+        return;
+      }
+      if (!value || typeof value !== "object") {
+        summaryPanelEl.innerHTML = '<div class="message">暂无可读摘要。</div>';
+        return;
+      }
+      if (value.detail || value.error) {
+        const detail = value.detail || value.error;
+        summaryPanelEl.innerHTML = `<div class="message bad">操作失败：${escapeHtml(JSON.stringify(detail))}</div>`;
+        return;
+      }
+      if (value.quality_status) {
+        renderQualitySummary(value);
+        return;
+      }
+      if (value.contract === "vdo_vkp_handoff_v1") {
+        renderVkpHandoffSummary(value);
+        return;
+      }
+      if (value.ui === "mediago") {
+        renderMediaGoSummary(value);
+        return;
+      }
+      if (value.task) {
+        renderTaskSummary(value);
+        return;
+      }
+      if (value.status === "timeout" || value.status === "api_unavailable") {
+        renderPageLinkProblemSummary(value);
+        return;
+      }
+      if (value.route) {
+        renderRouteSummary(value);
+        return;
+      }
+      if (value.manifest || value.manifest_path) {
+        renderPlanSummary(value);
+        return;
+      }
+      if (Array.isArray(value.items)) {
+        renderBatchSummary(value);
+        return;
+      }
+      if (Array.isArray(value.tasks)) {
+        renderTaskListSummary(value);
+        return;
+      }
+      const message = value.message || "操作已完成。原始数据已收起，可展开查看。";
+      const tone = toneForStatus(value.status);
+      summaryPanelEl.innerHTML = `<div class="message ${tone}">${escapeHtml(message)}</div>`;
+    }
+
+    function renderTextSummary(text, context) {
+      const trimmed = String(text).trim();
+      if (context === "artifact") {
+        summaryPanelEl.innerHTML = `<div class="message ok">文件已打开。内容较长时可在下方原始数据中查看完整文本。</div>`;
+        return;
+      }
+      summaryPanelEl.innerHTML = `<div class="message">${escapeHtml(trimmed.slice(0, 600) || "暂无内容")}</div>`;
+    }
+
+    function renderArtifactSummary(kind, value) {
+      if (kind === "manifest" && value && typeof value === "object") {
+        renderArtifactManifestSummary(value);
+        return;
+      }
+      if (kind === "review_checklist" && value && typeof value === "object") {
+        renderReviewChecklistSummary(value);
+        return;
+      }
+      const label = artifactLabel(kind);
+      const message = kind === "log"
+        ? "执行日志已打开。日志通常比较长，完整内容在下方原始数据中。"
+        : kind === "report"
+          ? "下载报告已打开。完整报告在下方原始数据中。"
+          : `${label}已打开。完整内容在下方原始数据中。`;
+      summaryPanelEl.innerHTML = `<div class="message ok">${escapeHtml(message)}</div>`;
+    }
+
+    function renderArtifactManifestSummary(manifest) {
+      const items = [
+        ["文件类型", "下载计划"],
+        ["选择后端", manifest.selected_backend],
+        ["链接类型", manifest.url_type],
+        ["输出目录", manifest.output_dir],
+        ["原始链接", manifest.url]
+      ];
+      summaryPanelEl.innerHTML = `<div class="message ok">下载计划已打开。它记录了本次任务会交给哪个后端处理。</div>${renderKeyValues(items)}`;
+    }
+
+    function renderReviewChecklistSummary(review) {
+      const checks = Array.isArray(review.checks) ? review.checks : [];
+      const failed = checks.filter((check) => check && check.status === "failed").length;
+      const warning = checks.filter((check) => check && check.status === "warning").length;
+      const ok = checks.filter((check) => check && check.status === "ok").length;
+      const sizeMatches = review.backend_result && review.backend_result.size_matches_page;
+      const tone = failed ? "bad" : warning ? "warn" : "ok";
+      const headline = failed
+        ? "检查清单发现失败项，先不要标记通过。"
+        : warning
+          ? "检查清单有警告项，建议人工确认后再标记通过。"
+          : "检查清单没有发现明显问题。";
+      const items = [
+        ["文件类型", "检查清单"],
+        ["检查总数", checks.length],
+        ["通过", ok],
+        ["警告", warning],
+        ["失败", failed],
+        ["大小匹配页面信息", sizeMatches === true ? "是" : sizeMatches === false ? "否" : "暂无"],
+        ["下一步", review.next_action || "人工查看输出文件后再决定是否标记通过"]
+      ];
+      summaryPanelEl.innerHTML = `<div class="message ${tone}">${headline}</div>${renderKeyValues(items)}`;
+    }
+
+    function renderVkpHandoffSummary(payload) {
+      const human = payload.human_summary || {};
+      const media = payload.media || {};
+      const task = payload.download_task || {};
+      const suggestion = payload.vkp_ingest_suggestion || {};
+      const tone = payload.status === "planned"
+        ? task.accepted ? "ok" : "warn"
+        : payload.status === "review_required" || payload.status === "incomplete"
+          ? "warn"
+          : "bad";
+      const headline = human.headline || "VKP 交接包已生成。";
+      const items = [
+        ["交接状态", human.status_label || statusLabel(payload.status)],
+        ["平台", human.platform_label || (payload.source && payload.source.platform)],
+        ["标题", human.title || (payload.source && payload.source.page_title)],
+        ["质量结论", human.quality_label || task.quality_label],
+        ["人工确认", human.review_label || (task.accepted ? "已人工标记通过" : "尚未人工标记通过")],
+        ["媒体文件", human.media_label || (media.media_exists ? "已找到" : "未找到")],
+        ["媒体路径", media.media_path],
+        ["交接包路径", payload.handoff_manifest_path],
+        ["VKP 建议", suggestion.available ? "已生成命令建议，但不会自动执行" : suggestion.reason],
+        ["下一步", human.next_action || payload.next_action]
+      ];
+      summaryPanelEl.innerHTML = `<div class="message ${tone}">${escapeHtml(headline)}</div>${renderKeyValues(items)}`;
+    }
+
+    function renderTaskSummary(payload) {
+      const task = payload.task;
+      const artifacts = payload.artifacts || {};
+      const tone = toneForStatus(task.status);
+      const artifactNames = Object.keys(artifacts).map(artifactLabel).join("、") || "暂无";
+      const headline = payload.sniff_status === "captured" && task.status === "finished"
+        ? "页面视频已捕获并下载完成。可以查看报告和检查清单确认文件是否正常。"
+        : task.status === "failed"
+          ? "下载任务失败。请先查看执行日志，必要时使用规划重跑。"
+        : task.status === "finished"
+          ? "下载任务已完成。可以查看报告和检查清单确认文件是否正常。"
+          : task.status === "accepted"
+            ? "这个任务已经标记通过。"
+            : "任务详情已加载。";
+      const items = [
+        ["任务编号", `#${task.id}`],
+        ["当前状态", statusLabel(task.status)],
+        ["下载后端", task.backend],
+        ["返回码", task.returncode],
+        ["原始链接", task.url],
+        ["页面链接", payload.page_url],
+        ["捕获状态", payload.sniff_status === "captured" ? "已捕获媒体" : payload.sniff_status],
+        ["可查看文件", artifactNames]
+      ];
+      summaryPanelEl.innerHTML = `<div class="message ${tone}">${headline}</div>${renderKeyValues(items)}`;
+    }
+
+    function renderQualitySummary(payload) {
+      const tone = payload.quality_status === "fail" ? "bad" : payload.quality_status === "warn" ? "warn" : "ok";
+      const reasons = Array.isArray(payload.reason_labels) && payload.reason_labels.length
+        ? payload.reason_labels.join("、")
+        : "暂无明显问题";
+      const actions = Array.isArray(payload.recommended_actions) && payload.recommended_actions.length
+        ? payload.recommended_actions.join("、")
+        : "暂无推荐动作";
+      const headline = payload.quality_status === "pass"
+        ? "质量结论：可人工确认后标记通过。"
+        : payload.quality_status === "warn"
+          ? "质量结论：有警告，请先人工确认输出文件。"
+          : "质量结论：需要恢复或重新执行。";
+      const items = [
+        ["质量状态", payload.quality_label || statusLabel(payload.quality_status)],
+        ["原因", reasons],
+        ["推荐动作", actions],
+        ["可标记通过", payload.can_accept ? "是" : "否"],
+        ["可重新执行", payload.can_rerun ? "是" : "否"],
+        ["可页面嗅探恢复", payload.can_resume ? "是" : "否"],
+        ["下一步", payload.next_action]
+      ];
+      summaryPanelEl.innerHTML = `<div class="message ${tone}">${headline}</div>${renderKeyValues(items)}`;
+    }
+
+    function renderPageLinkProblemSummary(payload) {
+      const tone = payload.status === "timeout" ? "warn" : "bad";
+      const headline = payload.status === "timeout"
+        ? "还没有捕获到可下载视频。请在新打开的页面里点击播放视频，然后再次点击一键下载。"
+        : "本地服务暂不可用，请重新启动 WebUI 后再试。";
+      const items = [
+        ["页面链接", payload.page_url],
+        ["捕获状态", payload.sniff_status === "timeout" ? "等待播放/捕获超时" : payload.sniff_status],
+        ["下一步", payload.next_action],
+        ["错误", payload.error]
+      ];
+      summaryPanelEl.innerHTML = `<div class="message ${tone}">${escapeHtml(headline)}</div>${renderKeyValues(items)}`;
+    }
+
+    function renderRouteSummary(payload) {
+      const route = payload.route || {};
+      const adapter = payload.site_adapter || {};
+      const probe = payload.probe || {};
+      const platformNames = {
+        bilibili: "B站",
+        xiaohongshu: "小红书",
+        douyin: "抖音"
+      };
+      const extractionMode = adapter.matched
+        ? adapter.fallback_mode === "browser_sniffing"
+          ? `平台适配：${platformNames[adapter.name] || adapter.name}；优先普通下载，失败后建议页面嗅探`
+          : "站点适配"
+        : route.kind === "general"
+          ? "普通下载；失败后可页面嗅探"
+          : route.kind === "manifest" || route.kind === "direct-transfer"
+            ? "普通下载"
+            : "页面嗅探";
+      const items = [
+        ["提取方式", extractionMode],
+        ["推荐后端", route.preferred_backend],
+        ["链接类型", route.kind],
+        ["站点适配", adapter.matched ? `${adapter.name}（${adapter.reason || "已匹配"}）` : "未命中"],
+        ["公开页面解析", probe.probe_status ? `${probe.probe_status}：${probe.title || probe.next_action || "暂无标题"}` : adapter.capabilities && adapter.capabilities.includes("public_page_probe") ? "可解析，点击识别路由会尝试获取公开页面信息" : "不适用"],
+        ["是否会下载", payload.will_download ? "会" : "不会，只做识别"],
+        ["原因", route.reason]
+      ];
+      const headline = adapter.matched
+        ? adapter.fallback_mode === "browser_sniffing"
+          ? "已完成路由识别：平台适配已命中，优先普通下载；失败后建议页面嗅探。"
+          : "已完成路由识别：这个页面可以走站点适配；如嗅探超时，会尝试站点 fallback。"
+        : route.kind === "general"
+          ? "已完成路由识别：先尝试普通下载；失败时可切换页面嗅探。"
+          : "已完成路由识别。这里不会真正下载文件。";
+      summaryPanelEl.innerHTML = `<div class="message ok">${escapeHtml(headline)}</div>${renderKeyValues(items)}`;
+    }
+
+    function renderPlanSummary(payload) {
+      const manifest = payload.manifest || {};
+      const items = [
+        ["计划状态", statusLabel(payload.status)],
+        ["选择后端", manifest.selected_backend],
+        ["输出目录", manifest.output_dir],
+        ["计划文件", payload.manifest_path],
+        ["是否会下载", payload.will_download ? "会" : "不会，只写计划"]
+      ];
+      summaryPanelEl.innerHTML = `<div class="message ok">下载计划已生成。下一步可以点“一键下载”执行。</div>${renderKeyValues(items)}`;
+    }
+
+    function renderBatchSummary(payload) {
+      const failed = payload.items.filter((item) => item.status === "failed").length;
+      const finished = payload.items.filter((item) => item.status === "finished").length;
+      const retryable = payload.items.filter((item) => item.status === "retryable").length;
+      const tone = toneForStatus(payload.status);
+      const headline = payload.execute
+        ? failed
+          ? "批量下载已结束，但有任务失败。请在任务列表里查看失败项的质量结论和日志。"
+          : retryable
+            ? "批量下载已结束，部分页面需要播放后嗅探恢复。"
+            : "批量下载已完成。系统已先清洗输入、过滤重复链接，再逐条下载并生成报告。"
+        : "批量规划已完成。系统已先清洗输入、过滤非视频跳转和重复链接，再为每个链接生成独立计划。";
+      const items = [
+        ["批量状态", statusLabel(payload.status)],
+        ["链接数量", payload.items.length],
+        ["已完成", payload.execute ? finished : "未执行"],
+        ["失败", payload.execute ? failed : "未执行"],
+        ["需恢复", payload.execute ? retryable : "未执行"],
+        ["清洗输入数", payload.cleaning && payload.cleaning.input_count],
+        ["清洗保留数", payload.cleaning && payload.cleaning.item_count],
+        ["过滤/去重数", payload.cleaning && payload.cleaning.skipped_count],
+        ["归档默认", payload.cleaning && payload.cleaning.defaults && payload.cleaning.defaults.archive_sidecars],
+        ["是否会下载", payload.will_download ? "会" : "不会，只写计划"]
+      ];
+      summaryPanelEl.innerHTML = `<div class="message ${tone}">${headline}</div>${renderKeyValues(items)}`;
+    }
+
+    function renderMediaGoSummary(payload) {
+      const tone = payload.status === "imported" || payload.status === "available" || payload.status === "planned"
+        ? "ok"
+        : payload.status === "unavailable"
+          ? "warn"
+          : "bad";
+      const headline = payload.status === "imported"
+        ? "任务已导入 MediaGo。请切到 MediaGo 桌面 UI 查看队列。"
+        : payload.status === "available"
+          ? "MediaGo 已连接。可以把当前链接或批量清洗结果导入现成桌面 UI。"
+          : payload.status === "planned"
+            ? "MediaGo 导入计划已生成。这里不会自动下载。"
+            : "MediaGo 暂不可用。请先启动 MediaGo Desktop。";
+      const items = [
+        ["MediaGo 状态", payload.status],
+        ["任务数量", payload.task_count],
+        ["是否自动开始", payload.start_download ? "是" : "否，先进入 MediaGo 队列"],
+        ["HTTP 地址", payload.http_base],
+        ["导入接口", payload.import_endpoint],
+        ["单任务唤起链接", payload.deeplink ? "已生成" : "不适用"],
+        ["下一步", payload.next_action],
+        ["错误", payload.error]
+      ];
+      summaryPanelEl.innerHTML = `<div class="message ${tone}">${escapeHtml(headline)}</div>${renderKeyValues(items)}`;
+    }
+
+    function renderTaskListSummary(payload) {
+      const failed = payload.tasks.filter((task) => task.status === "failed").length;
+      const finished = payload.tasks.filter((task) => task.status === "finished").length;
+      const accepted = payload.tasks.filter((task) => task.status === "accepted").length;
+      const items = [
+        ["任务总数", payload.tasks.length],
+        ["已完成", finished],
+        ["失败", failed],
+        ["已通过", accepted]
+      ];
+      summaryPanelEl.innerHTML = `<div class="message">任务列表已刷新。点击左侧任务可查看详情。</div>${renderKeyValues(items)}`;
+    }
+
+    function renderTasks(tasks) {
+      taskListEl.innerHTML = "";
+      if (!tasks.length) {
+        taskListEl.innerHTML = '<div class="empty">暂无任务</div>';
+        return;
+      }
+      for (const task of tasks) {
+        const button = document.createElement("button");
+        button.className = `task-item ${selectedTask && selectedTask.id === task.id ? "active" : ""}`;
+        button.innerHTML = `
+          <div class="task-main">
+            <span class="task-url">${escapeHtml(task.url)}</span>
+            <span class="badge ${statusClass(task.status)}">${escapeHtml(statusLabel(task.status))}</span>
+          </div>
+          <div class="meta">#${task.id} · ${escapeHtml(task.backend)} · 返回码=${task.returncode ?? "暂无"}</div>
+        `;
+        button.addEventListener("click", () => loadTask(task.id));
+        taskListEl.appendChild(button);
+      }
+    }
+
+    function renderDetail(payload) {
+      selectedTask = payload.task;
+      selectedArtifacts = payload.artifacts || {};
+      selectedMetaEl.textContent = `#${selectedTask.id} ${statusLabel(selectedTask.status)}`;
+      rerunBtn.disabled = false;
+      executeRerunBtn.disabled = true;
+      resumeBtn.disabled = true;
+      acceptBtn.disabled = selectedTask.status === "accepted";
+      vkpHandoffBtn.disabled = false;
+      renderArtifactLinks();
+      renderArtifactTabs();
+      show(payload);
+    }
+
+    function updateRecoveryButtons(reviewPayload) {
+      selectedReview = reviewPayload;
+      acceptBtn.disabled = !reviewPayload.can_accept || !selectedTask || selectedTask.status === "accepted";
+      executeRerunBtn.disabled = !reviewPayload.can_rerun;
+      resumeBtn.disabled = !reviewPayload.can_resume;
+    }
+
+    async function loadTaskReview(taskId) {
+      const params = new URLSearchParams({db_path: dbPathEl.value});
+      const payload = await requestJson(`/operator/tasks/${taskId}/review?${params.toString()}`);
+      selectedReview = payload;
+      updateRecoveryButtons(payload);
+      show(payload);
+      return payload;
+    }
+
+    function renderArtifactLinks() {
+      artifactLinksEl.innerHTML = "";
+      for (const [kind, path] of Object.entries(selectedArtifacts)) {
+        const link = document.createElement("a");
+        link.href = `/artifacts?path=${encodeURIComponent(path)}`;
+        link.target = "_blank";
+        link.textContent = `${artifactLabel(kind)}：${path}`;
+        artifactLinksEl.appendChild(link);
+      }
+    }
+
+    function renderArtifactTabs() {
+      artifactTabsEl.innerHTML = "";
+      const order = ["manifest", "log", "report", "review_checklist"];
+      for (const kind of order) {
+        if (!selectedArtifacts[kind]) continue;
+        const button = document.createElement("button");
+        button.className = `tab ${activeArtifact === kind ? "active" : ""}`;
+        button.textContent = artifactLabel(kind);
+        button.addEventListener("click", () => loadArtifact(kind));
+        artifactTabsEl.appendChild(button);
+      }
+    }
+
+    async function loadArtifact(kind) {
+      activeArtifact = kind;
+      renderArtifactTabs();
+      try {
+        const path = selectedArtifacts[kind];
+        const text = await requestText(`/artifacts?path=${encodeURIComponent(path)}`);
+        if (kind === "manifest" || kind === "review_checklist") {
+          try {
+            show(JSON.parse(text), {type: "artifact", kind});
+            return;
+          } catch {
+            show(text, {type: "artifact", kind});
+            return;
+          }
+        }
+        show(text, {type: "artifact", kind});
+      } catch (error) {
+        show(error);
+      }
+    }
+
+    async function loadTasks() {
+      try {
+        const params = new URLSearchParams({
+          db_path: dbPathEl.value,
+          problem_only: String(problemOnlyEl.checked)
+        });
+        const payload = await requestJson(`/tasks?${params.toString()}`);
+        renderTasks(payload.tasks);
+        if (!selectedTask && payload.tasks.length) {
+          await loadTask(payload.tasks[0].id);
+        } else {
+          show(payload);
+        }
+      } catch (error) {
+        show(error);
+      }
+    }
+
+    async function loadTask(taskId) {
+      try {
+        const params = new URLSearchParams({db_path: dbPathEl.value});
+        const payload = await requestJson(`/tasks/${taskId}?${params.toString()}`);
+        renderDetail(payload);
+        await loadTaskReview(taskId);
+        renderTasks((await requestJson(`/tasks?${new URLSearchParams({db_path: dbPathEl.value, problem_only: String(problemOnlyEl.checked)}).toString()}`)).tasks);
+      } catch (error) {
+        show(error);
+      }
+    }
+
+    function shouldUsePageLinkDownload(route) {
+      return route && route.kind === "feishu-page";
+    }
+
+    function canFallbackToPageLink(route) {
+      return route && ["general", "bilibili-page", "xiaohongshu-page", "douyin-page"].includes(route.kind);
+    }
+
+    function shouldProbePublicPage(routePayload) {
+      const adapter = routePayload.site_adapter || {};
+      return adapter.matched && Array.isArray(adapter.capabilities) && adapter.capabilities.includes("public_page_probe");
+    }
+
+    async function runRouteInspection() {
+      const routePayload = await requestJson(`/route?url=${encodeURIComponent(urlEl.value)}`);
+      if (!shouldProbePublicPage(routePayload)) {
+        return routePayload;
+      }
+      try {
+        const probePayload = await requestJson("/site-adapter/probe", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            url: urlEl.value,
+            timeout_seconds: 5
+          })
+        });
+        return {...routePayload, probe: probePayload.probe};
+      } catch (error) {
+        return {
+          ...routePayload,
+          probe: {
+            probe_status: "fetch_failed",
+            next_action: "公开页面解析失败。仍可先普通下载；失败后使用页面嗅探。"
+          }
+        };
+      }
+    }
+
+    function openPageForSniffing(url) {
+      try {
+        window.open(url, "_blank", "noopener,noreferrer");
+      } catch {
+        // Popup blockers are handled by the visible waiting message.
+      }
+    }
+
+    async function runDirectDownload(backend) {
+      return requestJson("/download/execute", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          url: urlEl.value,
+          output_dir: outputDirEl.value,
+          backend,
+          db_path: dbPathEl.value
+        })
+      });
+    }
+
+    async function runPageLinkDownload() {
+      openPageForSniffing(urlEl.value);
+      show({
+        status: "running",
+        message: "已打开页面，正在等待播放/捕获视频请求。请在新页面点击播放视频，保持本页不要关闭。"
+      });
+      return requestJson("/download/page/execute", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          url: urlEl.value,
+          output_dir: outputDirEl.value,
+          db_path: dbPathEl.value,
+          timeout_seconds: 120,
+          poll_interval: 1
+        })
+      });
+    }
+
+    async function importCurrentToMediaGo() {
+      show({status: "running", message: "正在连接 MediaGo，并导入当前链接到现成桌面 UI..."});
+      return requestJson("/external-uis/mediago/import", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          url: urlEl.value,
+          output_dir: outputDirEl.value,
+          backend: backendEl.value || null,
+          start_download: false
+        })
+      });
+    }
+
+    async function importBatchToMediaGo() {
+      show({status: "running", message: "正在清洗批量输入，并导入 MediaGo 队列..."});
+      return requestJson("/external-uis/mediago/import", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          text: batchEl.value,
+          output_dir: outputDirEl.value,
+          backend: backendEl.value || null,
+          start_download: false
+        })
+      });
+    }
+
+    async function runOneClickDownload() {
+      const backend = backendEl.value || null;
+      show({status: "running", message: "识别链接类型..."});
+      const routePayload = await requestJson(`/route?url=${encodeURIComponent(urlEl.value)}`);
+      show(routePayload);
+      const route = routePayload.route || {};
+
+      if (shouldUsePageLinkDownload(route)) {
+        return runPageLinkDownload();
+      }
+
+      try {
+        show({status: "running", message: "正在下载，请等待后端完成..."});
+        const directPayload = await runDirectDownload(backend);
+        if (directPayload.status === "failed" && canFallbackToPageLink(route)) {
+          show({
+            status: "running",
+            message: "普通下载失败，自动切换到页面嗅探。已打开页面，请点击播放视频。"
+          });
+          return runPageLinkDownload();
+        }
+        return directPayload;
+      } catch (error) {
+        if (canFallbackToPageLink(route)) {
+          show({
+            status: "running",
+            message: "普通下载不可用，自动切换到页面嗅探。已打开页面，请点击播放视频。"
+          });
+          return runPageLinkDownload();
+        }
+        throw error;
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    async function boot() {
+      try {
+        const [healthPayload, configPayload] = await Promise.all([
+          requestJson("/health"),
+          requestJson("/config")
+        ]);
+        healthEl.textContent = healthPayload.status;
+        runtimeConfigEl.textContent = `${configPayload.api_base_url} · ${configPayload.check.status}`;
+        configDotEl.classList.toggle("warning", configPayload.check.status !== "ok");
+        await loadTasks();
+      } catch (error) {
+        healthEl.textContent = "离线";
+        show(error);
+      }
+    }
+
+    document.querySelector("#routeBtn").addEventListener("click", async () => {
+      try {
+        show(await runRouteInspection());
+      } catch (error) {
+        show(error);
+      }
+    });
+
+    document.querySelector("#planBtn").addEventListener("click", async () => {
+      try {
+        const backend = backendEl.value || null;
+        const payload = await requestJson("/download/plan", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            url: urlEl.value,
+            output_dir: outputDirEl.value,
+            backend,
+            write_manifest: true
+          })
+        });
+        show(payload);
+      } catch (error) {
+        show(error);
+      }
+    });
+
+    document.querySelector("#downloadBtn").addEventListener("click", async () => {
+      try {
+        const payload = await runOneClickDownload();
+        show(payload);
+        if (payload.task && payload.task.id) {
+          await loadTasks();
+          await loadTask(payload.task.id);
+        }
+      } catch (error) {
+        show(error);
+      }
+    });
+
+    document.querySelector("#mediagoBtn").addEventListener("click", async () => {
+      try {
+        show(await importCurrentToMediaGo());
+      } catch (error) {
+        show(error);
+      }
+    });
+
+    document.querySelector("#batchCleanBtn").addEventListener("click", async () => {
+      try {
+        const payload = await requestJson("/batch/clean", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({text: batchEl.value})
+        });
+        batchEl.value = payload.items.map((item) => item.url).join("\n");
+        show(payload);
+      } catch (error) {
+        show(error);
+      }
+    });
+
+    document.querySelector("#batchMediagoBtn").addEventListener("click", async () => {
+      try {
+        const payload = await importBatchToMediaGo();
+        show(payload);
+      } catch (error) {
+        show(error);
+      }
+    });
+
+    document.querySelector("#batchBtn").addEventListener("click", async () => {
+      try {
+        const cleanPayload = await requestJson("/batch/clean", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({text: batchEl.value})
+        });
+        batchEl.value = cleanPayload.items.map((item) => item.url).join("\n");
+        show(await requestJson("/batch/plan", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            output_dir: `${outputDirEl.value}/.vdo/web-batch`,
+            write_manifests: true,
+            items: cleanPayload.items
+          })
+        }));
+      } catch (error) {
+        show(error);
+      }
+    });
+
+    document.querySelector("#batchExecuteBtn").addEventListener("click", async () => {
+      try {
+        show({status: "running", message: "正在清洗输入、去重并批量下载，请等待后端完成..."});
+        const payload = await requestJson("/batch/execute", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            text: batchEl.value,
+            output_dir: outputDirEl.value,
+            db_path: dbPathEl.value,
+            backend: backendEl.value || null
+          })
+        });
+        if (payload.cleaning && Array.isArray(payload.items)) {
+          batchEl.value = payload.items.map((item) => item.url).join("\n");
+        }
+        show(payload);
+        await loadTasks();
+      } catch (error) {
+        show(error);
+      }
+    });
+
+    document.querySelector("#refreshTasksBtn").addEventListener("click", loadTasks);
+    problemOnlyEl.addEventListener("change", loadTasks);
+
+    rerunBtn.addEventListener("click", async () => {
+      if (!selectedTask) return;
+      try {
+        const payload = await requestJson(`/tasks/${selectedTask.id}/rerun/plan`, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            db_path: dbPathEl.value,
+            output_dir: outputDirEl.value,
+            backend: backendEl.value || null,
+            write_manifest: true
+          })
+        });
+        show(payload);
+      } catch (error) {
+        show(error);
+      }
+    });
+
+    executeRerunBtn.addEventListener("click", async () => {
+      if (!selectedTask) return;
+      try {
+        show({status: "running", message: "正在重新执行下载任务，请等待后端完成..."});
+        const payload = await requestJson(`/tasks/${selectedTask.id}/rerun/execute`, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            db_path: dbPathEl.value,
+            output_dir: outputDirEl.value,
+            backend: backendEl.value || null
+          })
+        });
+        show(payload);
+        await loadTasks();
+        if (payload.task && payload.task.id) {
+          await loadTask(payload.task.id);
+        }
+      } catch (error) {
+        show(error);
+      }
+    });
+
+    resumeBtn.addEventListener("click", async () => {
+      if (!selectedTask) return;
+      try {
+        openPageForSniffing(selectedTask.url);
+        show({
+          status: "running",
+          message: "已打开原页面，正在执行页面嗅探恢复。若尚未捕获到媒体，请在新页面点击播放视频后再次点击页面嗅探恢复。"
+        });
+        const payload = await requestJson(`/operator/tasks/${selectedTask.id}/resume/execute`, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            db_path: dbPathEl.value,
+            output_dir: outputDirEl.value
+          })
+        });
+        show(payload);
+        await loadTasks();
+        if (payload.task && payload.task.id) {
+          await loadTask(payload.task.id);
+        } else if (payload.resumed_task && payload.resumed_task.id) {
+          await loadTask(payload.resumed_task.id);
+        }
+      } catch (error) {
+        show(error);
+      }
+    });
+
+    acceptBtn.addEventListener("click", async () => {
+      if (!selectedTask) return;
+      try {
+        const payload = await requestJson(`/tasks/${selectedTask.id}/accept`, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({db_path: dbPathEl.value})
+        });
+        renderDetail(payload);
+        await loadTaskReview(payload.task.id);
+        await loadTasks();
+      } catch (error) {
+        show(error);
+      }
+    });
+
+    vkpHandoffBtn.addEventListener("click", async () => {
+      if (!selectedTask) return;
+      try {
+        const params = new URLSearchParams({
+          db_path: dbPathEl.value,
+          output_dir: `${outputDirEl.value}/vkp-handoffs`,
+          write_manifest: "true"
+        });
+        show({
+          status: "running",
+          message: "正在生成 VKP 交接包。这里只写 manifest，不下载，也不调用 VKP。"
+        });
+        show(await requestJson(`/operator/tasks/${selectedTask.id}/vkp-handoff?${params.toString()}`));
+      } catch (error) {
+        show(error);
+      }
+    });
+
+    boot();
+  </script>
+</body>
+</html>

@@ -1,0 +1,157 @@
+{
+  "config_path": "config/video_orchestrator.json",
+  "docs": {
+    "agent_discovery_markdown": "AGENT_DISCOVERY.md",
+    "site_adapter_runtime": "src\\video_orchestrator\\runtime\\site_adapters.py"
+  },
+  "interfaces": {
+    "cli": {
+      "config_check": "python -m video_orchestrator.config check",
+      "doctor": "python -m video_orchestrator.cli doctor --format json",
+      "download_dry_run": "python -m video_orchestrator.cli download <url> --dry-run --format json",
+      "download_execute": "python -m video_orchestrator.cli download <url> --format json",
+      "download_page": "python -m video_orchestrator.cli download-page <page-url> --format json",
+      "entrypoint_status": "python -m video_orchestrator.cli entrypoint-status --format json",
+      "mediago_task_status": "python -m video_orchestrator.cli mediago-task-status <task-id> --format json  # read-only status/output receipt",
+      "module_command": "python -m video_orchestrator.cli",
+      "openclaw_execute": "python -m video_orchestrator.cli openclaw-execute <telegram-text-or-file> --actor-id <telegram-user-id> --format json",
+      "openclaw_plan": "python -m video_orchestrator.cli openclaw-plan <telegram-text-or-file> --format json",
+      "route": "python -m video_orchestrator.cli route <url> --format json",
+      "task_vkp_handoff": "python -m video_orchestrator.cli task vkp-handoff <task_id> --format json",
+      "wechat_channels_import": "python -m video_orchestrator.cli wechat-channels-import <share-url> --format json  # public default queues for explicit review; advanced flags: --queue-only, --provider, --transport, --quality, --force-reimport",
+      "wechat_channels_resolve": "python -m video_orchestrator.cli wechat-channels-resolve <share-url> --format json",
+      "wechat_channels_status": "python -m video_orchestrator.cli wechat-channels-status --format json"
+    },
+    "http": {
+      "base_url": "http://127.0.0.1:8921",
+      "endpoints": [
+        "GET /",
+        "GET /health",
+        "GET /entrypoints/status",
+        "GET /config",
+        "GET /external-uis",
+        "GET /external-uis/mediago/status",
+        "GET /external-uis/mediago/tasks/{task_id}/status",
+        "POST /external-uis/mediago/plan",
+        "POST /external-uis/mediago/page/plan",
+        "POST /external-uis/mediago/import",
+        "GET /platform/wechat-channels/helper-status",
+        "POST /platform/wechat-channels/resolve",
+        "POST /platform/wechat-channels/import",
+        "POST /integrations/openclaw/link/plan",
+        "POST /integrations/openclaw/telegram/execute",
+        "GET /route?url=<url>",
+        "POST /download/plan",
+        "POST /download/execute",
+        "POST /download/page/execute",
+        "POST /site-adapter/probe",
+        "POST /batch/clean",
+        "POST /batch/plan",
+        "POST /batch/execute",
+        "POST /sniffed-media/plan",
+        "POST /sniffed-media/{capture_id}/manifest-probe",
+        "GET /sniffed-media/latest?page_url=<page-url>",
+        "GET /sniffed-media/diagnostics?limit=<n>",
+        "GET /operator/handoff",
+        "GET /operator/status",
+        "GET /operator/tasks/retryable",
+        "GET /operator/tasks/{task_id}/review",
+        "GET /operator/tasks/{task_id}/handoff",
+        "GET /operator/tasks/{task_id}/vkp-handoff",
+        "POST /operator/tasks/{task_id}/resume/plan",
+        "POST /operator/tasks/{task_id}/resume/execute",
+        "GET /tasks",
+        "GET /tasks/{task_id}",
+        "POST /tasks/{task_id}/rerun/plan",
+        "POST /tasks/{task_id}/rerun/execute",
+        "POST /tasks/{task_id}/accept",
+        "GET /artifacts?path=<path>"
+      ]
+    },
+    "mcp": {
+      "command": "vdo-mcp",
+      "cwd": ".",
+      "tools": [
+        "vdo_config_check",
+        "vdo_backends",
+        "vdo_route",
+        "vdo_plan_download",
+        "vdo_batch_plan",
+        "vdo_list_tasks",
+        "vdo_get_task",
+        "vdo_read_artifact",
+        "vdo_operator_status",
+        "vdo_task_retryable",
+        "vdo_task_review",
+        "vdo_task_resume_plan",
+        "vdo_handoff",
+        "vdo_task_handoff",
+        "vdo_task_vkp_handoff"
+      ]
+    },
+    "web": {
+      "launcher": "python -m video_orchestrator.web_server",
+      "status": "vdo entrypoint-status --format json",
+      "url": "http://127.0.0.1:8921/"
+    }
+  },
+  "project_root": ".",
+  "runtime": {
+    "api_base_url": "http://127.0.0.1:8921",
+    "browser_sniffer": {
+      "output_dir": "downloads",
+      "plan_endpoint": "http://127.0.0.1:8921/sniffed-media/plan"
+    },
+    "execution": {
+      "hard_timeout_seconds": 7200,
+      "idle_timeout_seconds": 300
+    },
+    "external_uis": {
+      "mediago": {
+        "api_key_env": "MEDIAGO_API_KEY",
+        "custom_scheme": "mediago-community",
+        "desktop_http_base": "http://127.0.0.1:39719"
+      }
+    },
+    "site_probe": {
+      "max_redirects": 3,
+      "max_response_bytes": 2097152,
+      "proxy_configured": true,
+      "transport": "trusted_local_proxy"
+    },
+    "state": {
+      "state_dir": ".vdo"
+    },
+    "web": {
+      "host": "127.0.0.1",
+      "port": 8921,
+      "scheme": "http"
+    },
+    "wechat_channels": {
+      "defaults": {
+        "provider": "auto",
+        "quality": "highest",
+        "start_download": false,
+        "transport": "auto"
+      },
+      "proxy_from_site_probe_config": true,
+      "public_profile_enabled": false,
+      "public_profile_host": null
+    }
+  },
+  "safety": {
+    "audio_sniffing": "Runtime and browser extension share media_kind rules; generic audio/* responses and audio-only HLS masters are planning candidates",
+    "browser_capture_lease": "sensitive browser capture data is memory-only for 600 seconds; persisted manifests and diagnostics are non-replayable and redacted",
+    "cli": "real downloads require explicit download, download-page, download-tencent-meeting, batch --execute, rerun, or allowlisted openclaw-execute confirmation commands",
+    "http": "planning-first; POST /download/execute, POST /download/page/execute, POST /batch/execute, POST /tasks/{task_id}/rerun/execute, POST /operator/tasks/{task_id}/resume/execute, POST /external-uis/mediago/import, POST /platform/wechat-channels/import, and POST /integrations/openclaw/telegram/execute are explicit local WebUI/user-triggered execution or handoff endpoints",
+    "mcp": "planning-only; no real backend execution tools",
+    "mediago_capability_gate": "Douyin page URLs are not mapped to MediaGo youtube tasks; resolve them to direct MP4 or HLS before explicit import",
+    "service_lifecycle": "managed background UI stop requires explicit confirmation plus matching PID, process start time, executable path, project root, configured endpoint, and receipt id; command-line markers are an additional check when available",
+    "site_adapters": "site-specific page routing lives in src/video_orchestrator/runtime/site_adapters.py and is reused by router and page-link fallback",
+    "site_probe": "planning-only public page probe uses a configured trusted loopback proxy plus adapter host allowlists; it does not claim DNS pinning",
+    "wechat_channels": "resolve stays planning-only; explicit MediaGo import uses the configured start-download policy, uses content/variant dedupe, persists only safe MediaGo task receipts, and never persists signed media URL queries or request headers"
+  },
+  "schema_version": 1,
+  "service": "video-download-orchestrator",
+  "status": "stable_local_planning_tool"
+}

@@ -1,0 +1,9 @@
+{
+  "name": "org.video_orchestrator.sniffer",
+  "description": "Native messaging bridge for video-download-orchestrator browser sniffing.",
+  "path": "REPLACE_WITH_ABSOLUTE_NATIVE_HOST_PATH",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://REPLACE_WITH_EXTENSION_ID/"
+  ]
+}

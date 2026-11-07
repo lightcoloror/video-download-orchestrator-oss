@@ -1,0 +1,60 @@
+{
+  "contract": "vdo-artifact-lifecycle-adapter.v1",
+  "producer_tool_id": "video-download-orchestrator",
+  "owner_lane": "video-download-orchestrator",
+  "lifecycle_profile": "media",
+  "cleanup_mode": "plan_only",
+  "automatic_purge": false,
+  "minimum_free_bytes": 536870912,
+  "warning_free_bytes": 5368709120,
+  "output_headroom_multiplier": 1.25,
+  "long_media_threshold_seconds": 600,
+  "artifact_roots": [
+    {
+      "root_id": "runtime-state",
+      "path_source": "runtime_state_dir",
+      "max_depth": 8,
+      "max_items": 2000
+    },
+    {
+      "root_id": "project-downloads",
+      "path_source": "project_relative",
+      "path": "downloads",
+      "max_depth": 8,
+      "max_items": 2000
+    }
+  ],
+  "authoritative_paths": [
+    "**/.vdo/manifests/**",
+    "**/.vdo/reports/**",
+    "**/review-checklist.json",
+    "**/summary.json",
+    "**/*.info.json",
+    "**/*.description",
+    "**/receipts/**",
+    "**/approvals/**",
+    "**/final/**",
+    "**/deliverables/**",
+    "**/archive/**",
+    "**/成品/**"
+  ],
+  "candidate_categories": [
+    "failed_download",
+    "temporary_fragment",
+    "rebuildable_remux",
+    "proxy_media",
+    "duplicate_conversion",
+    "cache"
+  ],
+  "protected_categories": [
+    "original_download",
+    "successful_archive",
+    "source_platform_evidence",
+    "human_retained_clip",
+    "final_deliverable",
+    "account_or_authorization_state",
+    "approval_or_operation_receipt",
+    "active_run_or_checkpoint"
+  ],
+  "synthetic_restore_marker": ".vdo-artifact-lifecycle-synthetic"
+}

@@ -1,0 +1,26 @@
+{
+  "name": "range-direct-mp4",
+  "payload": {
+    "url": "https://media.example.com/private/recording.mp4?token=TOKEN_PLACEHOLDER",
+    "page_url": "https://example.com/private-recording",
+    "capture_session_id": "fixture-range-direct",
+    "media_type": "MP4",
+    "category": "files",
+    "resource_type": "media",
+    "method": "GET",
+    "status_code": 206,
+    "content_type": "video/mp4",
+    "request_headers": {
+      "Range": "bytes=8650752-",
+      "Referer": "https://example.com/",
+      "User-Agent": "Mozilla/5.0 fixture"
+    },
+    "response_headers": {
+      "content-type": "video/mp4",
+      "content-range": "bytes 8650752-943718399/943718400",
+      "content-length": "935067648"
+    }
+  },
+  "expected_backend": "curl",
+  "expected_quality_min": 50
+}

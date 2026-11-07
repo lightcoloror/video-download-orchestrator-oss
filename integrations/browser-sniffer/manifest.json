@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Video Orchestrator Sniffer",
+  "version": "0.1.0",
+  "description": "Detect audio/video media and HLS/DASH manifests, then submit planning requests to a local video-download-orchestrator API.",
+  "permissions": [
+    "webRequest",
+    "tabs",
+    "storage"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*",
+    "http://127.0.0.1:*/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Video Orchestrator"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  }
+}

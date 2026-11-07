@@ -1,0 +1,24 @@
+{
+  "name": "plain-direct-mp4",
+  "payload": {
+    "url": "https://media.example.com/public/tutorial.mp4",
+    "page_url": "https://example.com/tutorial",
+    "capture_session_id": "fixture-plain-direct",
+    "media_type": "MP4",
+    "category": "files",
+    "resource_type": "media",
+    "method": "GET",
+    "status_code": 200,
+    "content_type": "video/mp4",
+    "request_headers": {
+      "Referer": "https://example.com/",
+      "User-Agent": "Mozilla/5.0 fixture"
+    },
+    "response_headers": {
+      "content-type": "video/mp4",
+      "content-length": "734003200"
+    }
+  },
+  "expected_backend": "curl",
+  "expected_quality_min": 80
+}

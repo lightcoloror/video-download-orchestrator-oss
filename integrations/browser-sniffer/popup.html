@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>视频下载助手</title>
+  <style>
+    body {
+      width: 340px;
+      margin: 0;
+      padding: 12px;
+      font: 13px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #1d2733;
+      background: #f7f8fa;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 15px;
+    }
+
+    .row {
+      display: grid;
+      gap: 4px;
+      margin: 8px 0;
+    }
+
+    .label {
+      color: #667281;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    code,
+    pre {
+      border: 1px solid #d9dee7;
+      border-radius: 6px;
+      background: #fff;
+      padding: 6px;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      width: fit-content;
+      border-radius: 999px;
+      padding: 3px 8px;
+      background: #eef2f6;
+      font-weight: 700;
+    }
+
+    .ok {
+      background: #dcfae6;
+      color: #067647;
+    }
+
+    .bad {
+      background: #fee4e2;
+      color: #b42318;
+    }
+
+    button {
+      width: fit-content;
+      border: 1px solid #c7d0dd;
+      border-radius: 6px;
+      background: #fff;
+      color: #1d2733;
+      padding: 5px 8px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    details {
+      margin: 8px 0;
+    }
+
+    summary {
+      cursor: pointer;
+      color: #115e59;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <h1>视频下载助手</h1>
+  <div class="row">
+    <div class="label">提交端点</div>
+    <code id="endpoint">加载中</code>
+  </div>
+  <div class="row">
+    <div class="label">服务状态</div>
+    <span id="service" class="badge">检查中</span>
+  </div>
+  <div class="row">
+    <div class="label">捕获会话</div>
+    <code id="captureSession">加载中</code>
+    <button id="newSession" type="button">新建会话</button>
+  </div>
+  <div class="row">
+    <div class="label">最新捕获</div>
+    <span id="latestStatus" class="badge">检查中</span>
+    <pre id="latestSummary">暂无</pre>
+  </div>
+  <div class="row">
+    <div class="label">下载命令</div>
+    <pre id="operatorCommand">加载中</pre>
+    <button id="copyCommand" type="button">复制命令</button>
+  </div>
+  <div class="row">
+    <div class="label">当前页交接建议</div>
+    <pre id="handoffSummary">加载中</pre>
+    <button id="copyHandoffCommand" type="button">复制建议命令</button>
+  </div>
+  <div class="row">
+    <div class="label">操作员状态</div>
+    <span id="operatorStatus" class="badge">检查中</span>
+    <pre id="operatorSummary">暂无</pre>
+    <button id="copyRetryableCommand" type="button">复制可重试命令</button>
+  </div>
+  <div class="row">
+    <div class="label">可重试任务</div>
+    <pre id="retryableTasks">暂无</pre>
+    <button id="copyResumeCommand" type="button">复制恢复命令</button>
+  </div>
+  <details>
+    <summary>调试信息</summary>
+    <div class="row">
+      <div class="label">最近提交</div>
+      <pre id="lastSubmit">暂无</pre>
+    </div>
+    <div class="row">
+      <div class="label">近期捕获</div>
+      <pre id="recentSubmits">暂无</pre>
+    </div>
+  </details>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

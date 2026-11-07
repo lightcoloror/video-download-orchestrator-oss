@@ -1,0 +1,52 @@
+[project]
+name = "video-download-orchestrator"
+version = "0.1.0"
+requires-python = ">=3.11"
+description = "Local planning, authorized video download orchestration and evidence handoff"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+dependencies = [
+  "typer>=0.12",
+  "pydantic>=2",
+  "pydantic-settings>=2",
+  "requests>=2",
+  "m3u8>=6.0.0",
+  "filetype>=1.2.0,<2",
+  "yt-dlp>=2024.8.6",
+  "artifact-lifecycle-core @ git+https://github.com/lightcoloror/artifact-lifecycle-core-oss.git@fab239085724458c2a6b9452d0a1ba4f4012593e",
+]
+
+[project.optional-dependencies]
+api = [
+  "fastapi>=0.115",
+  "uvicorn>=0.30",
+]
+dev = [
+  "pytest>=8",
+  "ruff>=0.6",
+]
+portability = [
+  "jsonschema>=4.23",
+]
+test = ["pytest>=9,<10", "fastapi>=0.115", "uvicorn>=0.30", "httpx>=0.27", "jsonschema>=4.23"]
+
+[project.scripts]
+vdo = "video_orchestrator.cli:app"
+vdo-mcp = "video_orchestrator.mcp_server:serve_stdio"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+markers = [
+  "backend_integration: opt-in checks for installed backend binaries; enable with VDO_RUN_BACKEND_INTEGRATION=1",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/video_orchestrator"]
+
+[tool.hatch.metadata]
+allow-direct-references = true

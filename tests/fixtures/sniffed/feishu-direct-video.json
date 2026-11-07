@@ -1,0 +1,24 @@
+{
+  "name": "feishu-direct-video",
+  "payload": {
+    "url": "https://internal-api-drive-stream.feishu.cn/space/api/box/stream/download/video/example/?quality=1080p&data_version=1234567890&mount_point=docx_file",
+    "page_url": "https://my.feishu.cn/wiki/example?from=fixture",
+    "capture_session_id": "fixture-feishu",
+    "media_type": "MP4",
+    "category": "files",
+    "resource_type": "media",
+    "method": "GET",
+    "status_code": 200,
+    "content_type": "video/mp4",
+    "request_headers": {
+      "Referer": "https://my.feishu.cn/",
+      "Cookie": "SESSION_PLACEHOLDER"
+    },
+    "response_headers": {
+      "content-type": "video/mp4",
+      "content-length": "12345678"
+    }
+  },
+  "expected_backend": "curl",
+  "expected_quality_min": 80
+}

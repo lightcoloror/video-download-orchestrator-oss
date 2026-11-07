@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.vdo/
+downloads/
+user-downloads/
+.external-src/
+helpers/wechat-channels-helper/.venv/
+helpers/wechat-channels-helper/config.json

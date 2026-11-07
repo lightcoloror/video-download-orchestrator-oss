@@ -1,0 +1,19 @@
+{
+  "schema_version": "video-download-portability-fixture.v1",
+  "fixture_id": "direct-mp4-planning-only",
+  "synthetic": true,
+  "purpose": "offline_route_planning_contract_verification",
+  "input": {
+    "url": "https://media.example.invalid/synthetic/sample.mp4",
+    "authentication": "not_provided",
+    "cookie_usage": "forbidden",
+    "rights_status": "unverified"
+  },
+  "expected": {
+    "kind": "direct-transfer",
+    "preferred_backend": "aria2",
+    "will_download": false,
+    "network_execution_performed": false,
+    "rights_verified": false
+  }
+}

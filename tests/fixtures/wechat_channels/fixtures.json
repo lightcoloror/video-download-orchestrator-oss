@@ -1,0 +1,109 @@
+{
+  "contract": "wechat_channels_share_url_fixtures_v1",
+  "note": "脱敏 fixtures：所有分享链接与字段均为合成示例，不含真实凭证、解密参数或签名媒体地址。",
+  "cases": [
+    {
+      "name": "normal_share_link",
+      "raw": "https://weixin.qq.com/sph/Ali0QjN99U",
+      "canonical": "https://weixin.qq.com/sph/Ali0QjN99U",
+      "kind": "wechat-channels-page",
+      "cleaning_reason": "wechat_channels_share_link"
+    },
+    {
+      "name": "share_link_with_tracking_query",
+      "raw": "https://weixin.qq.com/sph/Ali0QjN99U?scene=1&from=timeline&poc_token=PLACEHOLDER_TOKEN",
+      "canonical": "https://weixin.qq.com/sph/Ali0QjN99U",
+      "kind": "wechat-channels-page",
+      "cleaning_reason": "wechat_channels_share_link",
+      "note": "规范化后所有查询参数被丢弃，敏感参数不在日志或文档中展开"
+    },
+    {
+      "name": "channels_page_url",
+      "raw": "https://channels.weixin.qq.com/finder-preview/pages/feed?entry_card_type=48",
+      "kind": "wechat-channels-page",
+      "note": "视频号页面；同样只做识别与计划"
+    },
+    {
+      "name": "not_a_share_link_weixin_other_path",
+      "raw": "https://weixin.qq.com/webfe/message/123",
+      "kind": "general",
+      "note": "weixin.qq.com 非 /sph/ 路径不应命中视频号适配器"
+    },
+    {
+      "name": "cdn_media_url_not_page",
+      "raw": "https://finder.video.qq.com/251/20302/stodownload?encfilekey=PLACEHOLDER",
+      "kind": "general",
+      "note": "媒体 CDN 地址不是分享页面，不命中适配器"
+    },
+    {
+      "name": "empty_share_id",
+      "raw": "https://weixin.qq.com/sph/",
+      "canonical": null,
+      "cleaning_reason": "missing_wechat_channels_id",
+      "kind": "wechat-channels-page",
+      "note": "缺少视频号 ID 时清洗层安全拒绝；形态上仍是 /sph/ 分享路径，由适配器识别、清洗层拒绝"
+    }
+  ],
+  "helper_statuses": [
+    {
+      "name": "not_configured",
+      "config_http_base": "",
+      "expected": "not_configured"
+    },
+    {
+      "name": "available",
+      "config_http_base": "http://127.0.0.1:17820",
+      "mock_http_status": 200,
+      "expected": "available"
+    },
+    {
+      "name": "unavailable",
+      "config_http_base": "http://127.0.0.1:17820",
+      "mock_http_status": 503,
+      "expected": "unavailable"
+    }
+  ],
+  "resolve_responses": [
+    {
+      "name": "resolved",
+      "request": {
+        "url": "https://weixin.qq.com/sph/Ali0QjN99U"
+      },
+      "response": {
+        "status": "resolved",
+        "title": "合成示例视频标题",
+        "source": "wechat-channels",
+        "quality": "1080p",
+        "duration_seconds": 123,
+        "media_url": "https://finder.video.qq.com/251/20302/stodownload?encfilekey=PLACEHOLDER_SIGN",
+        "reason": "ok"
+      },
+      "expected": "resolved"
+    },
+    {
+      "name": "auth_expired",
+      "request": {
+        "url": "https://weixin.qq.com/sph/Ali0QjN99U"
+      },
+      "response": {
+        "status": "review_required",
+        "reason": "auth_expired",
+        "message": "登录态已过期，请在微信中重新打开视频",
+        "next_action": "请在本机微信完成登录后重试，或改用微信桌面端播放捕获。"
+      },
+      "expected": "review_required"
+    },
+    {
+      "name": "not_downloadable",
+      "request": {
+        "url": "https://weixin.qq.com/sph/Ali0QjN99U"
+      },
+      "response": {
+        "status": "review_required",
+        "reason": "not_downloadable",
+        "message": "该视频暂不允许下载"
+      },
+      "expected": "review_required"
+    }
+  ]
+}

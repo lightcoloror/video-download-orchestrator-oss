@@ -1,0 +1,70 @@
+{
+  "web": {
+    "scheme": "http",
+    "host": "127.0.0.1",
+    "port": 8921
+  },
+  "browser_sniffer": {
+    "plan_path": "/sniffed-media/plan",
+    "output_dir": "downloads"
+  },
+  "execution": {
+    "hard_timeout_seconds": 7200,
+    "idle_timeout_seconds": 300
+  },
+  "runtime": {
+    "state_dir": ".vdo"
+  },
+  "network": {
+    "site_probe": {
+      "transport": "trusted_local_proxy",
+      "proxy_url": "http://127.0.0.1:8080",
+      "timeout_seconds": 10,
+      "max_redirects": 3,
+      "max_response_bytes": 2097152
+    }
+  },
+  "external_uis": {
+    "mediago": {
+      "desktop_http_base": "http://127.0.0.1:39719",
+      "custom_scheme": "mediago-community",
+      "api_key_env": "MEDIAGO_API_KEY"
+    }
+  },
+  "wechat_channels": {
+    "defaults": {
+      "provider": "auto",
+      "transport": "auto",
+      "quality": "highest",
+      "start_download": false
+    },
+    "helper": {
+      "http_base": "",
+      "status_endpoint": "/healthy",
+      "resolve_endpoint": "/api/parse",
+      "timeout_seconds": 2,
+      "api_key_env": "",
+      "media_host_suffixes": [
+        "channels.weixin.qq.com",
+        "finder.video.qq.com",
+        "qpic.cn",
+        "wxapp.tc.qq.com"
+      ]
+    },
+    "providers": {
+      "public-profile": {
+        "enabled": false,
+        "endpoint": "https://example.invalid/api/video/profile",
+        "allowed_host_suffixes": [
+          "example.invalid"
+        ],
+        "timeout_seconds": 10,
+        "max_response_bytes": 2097152,
+        "transport_order": [
+          "direct",
+          "proxy"
+        ]
+      }
+    }
+  }
+}

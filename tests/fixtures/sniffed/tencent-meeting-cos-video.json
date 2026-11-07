@@ -1,0 +1,24 @@
+{
+  "name": "tencent-meeting-cos-video",
+  "payload": {
+    "url": "https://ylz.cos.meeting.tencent.com/cos/249780621/example/TM-20250906195107-recording-1.mp4?token=TOKEN_PLACEHOLDER",
+    "page_url": "https://meeting.tencent.com/meeting-record/shares?id=share-id&reload=1",
+    "capture_session_id": "fixture-tencent",
+    "media_type": "MP4",
+    "category": "files",
+    "resource_type": "media",
+    "method": "GET",
+    "status_code": 200,
+    "content_type": "video/mp4",
+    "request_headers": {
+      "Referer": "https://meeting.tencent.com/",
+      "User-Agent": "Mozilla/5.0 fixture"
+    },
+    "response_headers": {
+      "content-type": "video/mp4",
+      "content-length": "987654321"
+    }
+  },
+  "expected_backend": "curl",
+  "expected_quality_min": 80
+}
