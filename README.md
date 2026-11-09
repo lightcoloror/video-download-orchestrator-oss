@@ -41,3 +41,8 @@ Artifact Lifecycle Core is pinned to its public source revision. The public
 edition retains the existing lifecycle checks and planning/approval boundaries.
 VKP handoff suggestions use the public video-knowledge CLI and relative output
 paths. See LICENSE, THIRD_PARTY_NOTICES.md and AGENT_DISCOVERY.md.
+
+
+### Windows source-checkout CLI helpers
+
+The existing `scripts/vdo.ps1` entry and its shared `runtime-python.ps1` selector are included unchanged. See [the operator guide](docs/windows-cli-entry.md) for environment and argument behavior. This source edition has nonexecuting syntax and source checks only; actual CLI, download and interpreter behavior remain unverified.
