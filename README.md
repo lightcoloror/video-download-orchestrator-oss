@@ -48,3 +48,7 @@ paths. See LICENSE, THIRD_PARTY_NOTICES.md and AGENT_DISCOVERY.md.
 The existing `scripts/vdo.ps1` entry and its shared `runtime-python.ps1` selector are included unchanged. See [the operator guide](docs/windows-cli-entry.md) for environment and argument behavior. This source edition has nonexecuting syntax and source checks only; actual CLI, download and interpreter behavior remain unverified.
 
 See [docs/windows-ui-lifecycle.md](docs/windows-ui-lifecycle.md) for the VDO Windows UI launcher scripts (`start-ui.ps1`, `status-ui.ps1`, `stop-ui.ps1`, `serve-ui.ps1`, `start-ui-scheduled.ps1`), the managed-receipt and health controls, and the optional explicit PortRecord path. Verified so far: eight static checks pass and the five launcher scripts parse without Windows PowerShell 5.1 syntax errors. Synthetic fixture setup fails on a permission refusal while creating temporary test files, so the wrapper runtime controls, the bad-copy control, and real UI, scheduler, process, and knowledge-base behavior remain unverified; no runtime pass is claimed.
+
+## Entry and upstream-source regression references
+
+See [complete test sources and fixed-base limitations](docs/entry-source-contract-regressions.md). Four original methods retained; source URL mismatches and pending launcher dependency are documented, not runtime passes.
