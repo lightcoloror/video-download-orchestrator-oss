@@ -53,3 +53,15 @@ See [docs/windows-ui-lifecycle.md](docs/windows-ui-lifecycle.md) for the VDO Win
 ## MediaGo client launcher source
 
 See [explicit client launcher](docs/mediago-client-launcher-source.md) for the existing operator entry. Nonexecuting source checks only; backend/client startup and Windows PowerShell 5.1 runtime are unverified. No external client binary is bundled.
+
+## Entry and upstream-source regression references
+
+See [complete test sources and fixed-base limitations](docs/entry-source-contract-regressions.md). Four original methods retained; source URL mismatches and pending launcher dependency are documented, not runtime passes.
+
+## Explicit Python workload entry sources
+
+See [entry wrappers and process effects](docs/explicit-python-entry-sources.md) for backend integration and stdio MCP source references. Syntax and actual workloads remain unverified; no installation or execution is implied.
+
+## Operator and page-capture smoke source references
+
+See [complete source and execution limits](docs/operator-page-smoke-source.md). These scripts may start services and write runtime state; syntax and actual smoke execution are unverified.
