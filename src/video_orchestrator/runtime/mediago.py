@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 import os
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+try:
+    from datetime import UTC
+except ImportError:
+    UTC = timezone.utc
 from collections.abc import Iterable
 from collections.abc import Mapping
 from pathlib import Path

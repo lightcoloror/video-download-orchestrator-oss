@@ -92,7 +92,7 @@ def get_backend_registry() -> dict[str, BackendAdapter]:
                 supported_kinds=["gallery"],
                 fallbacks=["yt-dlp"],
                 install_hint="Install gallery-dl and ensure `gallery-dl` is on PATH.",
-                reference_url="https://github.com/mikf123/gallery-dl",
+                reference_url="https://codeberg.org/mikf/gallery-dl",
                 recommended_for=["gallery and archive-oriented sites"],
             ),
             no_header_adapter(build_gallery_dl_command),

@@ -31,7 +31,7 @@ def get_external_ui_status(*, check: bool = False) -> list[ExternalUiSpec]:
         ExternalUiSpec(
             name="mediago",
             purpose="现成中文桌面 UI，可通过 HTTP API 或自定义协议接收下载任务",
-            source_project="https://github.com/caorushizi/mediago",
+            source_project="https://github.com/mediago-dev/mediago",
             local_path=_path_if_exists(source_root / "video-router-candidates" / "mediago"),
             integration_mode="external_desktop_ui_http_handoff",
             routes=["yt-dlp-api", "yt-dlp", "n_m3u8dl_re", "aria2", "bilibili"],

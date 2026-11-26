@@ -17,7 +17,11 @@ import os
 import sqlite3
 from collections.abc import Callable
 from copy import deepcopy
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+try:
+    from datetime import UTC
+except ImportError:
+    UTC = timezone.utc
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit

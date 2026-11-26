@@ -7,7 +7,11 @@ import os
 import re
 import sqlite3
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+try:
+    from datetime import UTC
+except ImportError:
+    UTC = timezone.utc
 from functools import lru_cache
 from pathlib import Path, PurePosixPath
 from typing import Any
